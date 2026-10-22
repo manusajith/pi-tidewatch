@@ -19,6 +19,8 @@ const MIN_BODY_ROWS = 5;
 const MIN_WIDTH = 4;
 const MAX_WIDTH = 140;
 
+const PROBLEM_STATUSES = new Set<TraceCall["status"]>(["error", "unfinished"]);
+
 interface DetailCache {
   seq: number;
   status: TraceCall["status"];
@@ -50,7 +52,7 @@ export class TraceDock implements Component {
   #selected = 0;
   #listScroll = 0;
   #detailScroll = 0;
-  #errorsOnly = false;
+  #problemsOnly = false;
 
   constructor({ log, tui, theme, keybindings, clear, close }: TraceDockOptions) {
     this.#log = log;
@@ -99,7 +101,7 @@ export class TraceDock implements Component {
 
   #visibleCalls(): TraceCall[] {
     const calls = this.#log.calls.toReversed();
-    return this.#errorsOnly ? calls.filter((call) => call.status === "error") : calls;
+    return this.#problemsOnly ? calls.filter((call) => PROBLEM_STATUSES.has(call.status)) : calls;
   }
 
   #handleListInput(data: string): void {
@@ -125,7 +127,7 @@ export class TraceDock implements Component {
         this.#detailScroll = 0;
       }
     } else if (data === "e") {
-      this.#errorsOnly = !this.#errorsOnly;
+      this.#problemsOnly = !this.#problemsOnly;
       this.#resetList();
     } else if (data === "c") {
       this.#clear();
@@ -179,19 +181,25 @@ export class TraceDock implements Component {
     if (this.#selected < this.#listScroll) this.#listScroll = this.#selected;
     if (this.#selected >= this.#listScroll + rows) this.#listScroll = this.#selected - rows + 1;
 
-    const { total, running, errors } = this.#log.counts();
+    const { total, running, errors, unfinished } = this.#log.counts();
     const subtitle = [
       pluralize(total, "call"),
       ...(running > 0 ? [`${running} running`] : []),
       ...(errors > 0 ? [pluralize(errors, "error")] : []),
-      ...(this.#errorsOnly ? ["errors only"] : []),
+      ...(unfinished > 0 ? [`${unfinished} unfinished`] : []),
+      ...(this.#problemsOnly ? ["problems only"] : []),
       "newest first",
     ].join(" · ");
 
     const body: string[] = [];
     const visible = calls.slice(this.#listScroll, this.#listScroll + rows);
     if (visible.length === 0) {
-      body.push(theme.fg("dim", this.#errorsOnly ? "  No errors." : "  No Tidewave calls yet."));
+      body.push(
+        theme.fg(
+          "dim",
+          this.#problemsOnly ? "  No errors or unfinished calls." : "  No Tidewave calls yet.",
+        ),
+      );
     } else {
       const columns = labelWidth(visible);
       const innerWidth = width - 2;
@@ -210,7 +218,7 @@ export class TraceDock implements Component {
     const footer = [
       `${keyText("tui.select.up")}/${keyText("tui.select.down")} select`,
       `${keyText("tui.select.confirm")} details`,
-      "e errors only",
+      "e problems only",
       "c clear",
       `${keyText("tui.select.cancel")} close`,
     ].join(" · ");

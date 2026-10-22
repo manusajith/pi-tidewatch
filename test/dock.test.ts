@@ -61,3 +61,18 @@ test("the detail view reflects a result that arrives while it is open", () => {
   log.finish("call-1", { result: "42", isError: false, durationMs: 5 });
   assert.ok(dock.render(80).some((line) => line.includes("42")));
 });
+
+test("the problems filter shows errors and unfinished script calls", () => {
+  const log = new CallLog();
+  log.replace([
+    { id: "a", toolName: "mcp__tidewave__get_docs", args: { code: "fine" }, status: "ok" },
+    { id: "b", toolName: "mcp__tidewave__get_logs", args: { code: "broken" }, status: "error" },
+    { id: "c", toolName: "mcp__tidewave__get_docs", args: { code: "cut" }, status: "unfinished" },
+  ]);
+  const dock = createDock(log);
+  dock.handleInput("e");
+  const text = dock.render(80).join("\n");
+  assert.ok(text.includes("1 error · 1 unfinished · problems only"), text);
+  assert.ok(text.includes("broken") && text.includes("cut"), text);
+  assert.ok(!text.includes("fine"), text);
+});

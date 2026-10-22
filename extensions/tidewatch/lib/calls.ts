@@ -45,6 +45,7 @@ export interface CallCounts {
   total: number;
   running: number;
   errors: number;
+  unfinished: number;
 }
 
 export function parseToolName(toolName: string): { server: string; tool: string } | undefined {
@@ -73,11 +74,13 @@ export class CallLog {
   counts(): CallCounts {
     let running = 0;
     let errors = 0;
+    let unfinished = 0;
     for (const call of this.#calls) {
       if (call.status === "running") running += 1;
       else if (call.status === "error") errors += 1;
+      else if (call.status === "unfinished") unfinished += 1;
     }
-    return { total: this.#calls.length, running, errors };
+    return { total: this.#calls.length, running, errors, unfinished };
   }
 
   get(id: string): TraceCall | undefined {

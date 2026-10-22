@@ -49,17 +49,17 @@ The live rows and status summary appear as soon as the agent calls a Tidewave to
 
 Open the dock with `shift+up` or `/tidewatch`.
 
-| Key                   | List               | Details       |
-| --------------------- | ------------------ | ------------- |
-| `up` / `down`         | Select a call      | Scroll        |
-| `pageUp` / `pageDown` | Move a page        | Scroll a page |
-| `g` / `G`             | First / last call  | Top / bottom  |
-| `enter` / `right`     | Show details       |               |
-| `e`                   | Toggle errors only |               |
-| `c`                   | Clear the trace    |               |
-| `escape`              | Close              | Back to list  |
-| `left`                |                    | Back to list  |
-| `q`                   | Close              | Close         |
+| Key                   | List                               | Details       |
+| --------------------- | ---------------------------------- | ------------- |
+| `up` / `down`         | Select a call                      | Scroll        |
+| `pageUp` / `pageDown` | Move a page                        | Scroll a page |
+| `g` / `G`             | First / last call                  | Top / bottom  |
+| `enter` / `right`     | Show details                       |               |
+| `e`                   | Toggle errors and unfinished calls |               |
+| `c`                   | Clear the trace                    |               |
+| `escape`              | Close                              | Back to list  |
+| `left`                |                                    | Back to list  |
+| `q`                   | Close                              | Close         |
 
 The selection keys follow your `tui.select.*` keybindings.
 
