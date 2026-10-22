@@ -4,6 +4,7 @@ import type { AutocompleteItem } from "@earendil-works/pi-tui";
 import { CallLog } from "./lib/calls.ts";
 import { TraceDock } from "./lib/dock.ts";
 import { formatDuration } from "./lib/format.ts";
+import { callsFromBranch } from "./lib/history.ts";
 import { CallWidget } from "./lib/widget.ts";
 
 const KEY = "tidewatch";
@@ -68,11 +69,17 @@ export default function tidewatch(pi: ExtensionAPI): void {
     }
   }
 
-  pi.on("session_start", (_event, ctx) => {
-    log.replace([]);
-    widgetMounted = false;
+  function restore(ctx: ExtensionContext): void {
+    log.replace(callsFromBranch(ctx.sessionManager.getBranch()));
     refresh(ctx);
+  }
+
+  pi.on("session_start", (_event, ctx) => {
+    widgetMounted = false;
+    restore(ctx);
   });
+
+  pi.on("session_tree", (_event, ctx) => restore(ctx));
 
   pi.on("tool_execution_start", (event, ctx) => {
     const call = log.start({

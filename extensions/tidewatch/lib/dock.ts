@@ -220,7 +220,7 @@ export class TraceDock implements Component {
       : "model (direct)";
     const result =
       call.result === undefined
-        ? block("(still running)", "dim")
+        ? block(call.status === "running" ? "(still running)" : "(not kept in the session)", "dim")
         : block(call.result || "(empty)", call.status === "error" ? "error" : "toolOutput");
 
     return [
