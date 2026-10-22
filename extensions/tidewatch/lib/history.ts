@@ -56,7 +56,7 @@ export function callsFromBranch(
         toolName: nested.name,
         args: nested.arguments ?? { omitted: `${nested.argumentsBytes ?? "?"} bytes` },
         parentId: message.toolCallId,
-        startedAt: message.timestamp,
+        startedAt: startedAt(message.timestamp, nested.durationMs),
         startedBefore: true,
         durationMs: nested.durationMs,
         status: nested.status,

@@ -109,7 +109,7 @@ test("callsFromBranch rebuilds Tidewave calls made from codemode scripts", () =>
       {
         id: "script/1",
         parentId: "script",
-        startedAt: 20_000,
+        startedAt: 19_995,
         startedBefore: true,
         status: "ok",
         result: undefined,
