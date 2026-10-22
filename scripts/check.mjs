@@ -6,6 +6,7 @@ const root = join(import.meta.dirname, "..");
 const required = [
   "extensions/tidewatch/index.ts",
   "extensions/tidewatch/lib/calls.ts",
+  "extensions/tidewatch/lib/detail.ts",
   "extensions/tidewatch/lib/dock.ts",
   "extensions/tidewatch/lib/format.ts",
   "extensions/tidewatch/lib/history.ts",

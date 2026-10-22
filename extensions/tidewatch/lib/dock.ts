@@ -6,20 +6,18 @@ import {
   matchesKey,
   type TUI,
   truncateToWidth,
-  wrapTextWithAnsi,
 } from "@earendil-works/pi-tui";
 
 import type { CallLog, TraceCall } from "./calls.ts";
-import { formatArgs, formatDuration, pluralize } from "./format.ts";
-import { callRow, displayLine, labelWidth, padToWidth, statusLabel } from "./render.ts";
+import { detailLines } from "./detail.ts";
+import { pluralize } from "./format.ts";
+import { callRow, labelWidth, padToWidth } from "./render.ts";
 
 const FRAME_ROWS = 7;
 const RESERVED_ROWS = 6;
 const MIN_BODY_ROWS = 5;
 const MIN_WIDTH = 4;
 const MAX_WIDTH = 140;
-
-type BodyColor = "toolOutput" | "error" | "dim";
 
 interface DetailCache {
   seq: number;
@@ -219,39 +217,6 @@ export class TraceDock implements Component {
     return this.#frame("Tidewave calls", subtitle, body, footer, width);
   }
 
-  #detailLines(call: TraceCall, width: number): string[] {
-    const theme = this.#theme;
-    const textWidth = Math.max(10, width - 6);
-    const label = (name: string) => theme.fg("toolTitle", name);
-    const block = (text: string, color: BodyColor) =>
-      text
-        .split("\n")
-        .map((line) => displayLine(line))
-        .flatMap((line) => (line.length > 0 ? wrapTextWithAnsi(line, textWidth) : [""]))
-        .map((line) => `   ${theme.fg(color, line)}`);
-
-    const caller = call.parentId
-      ? `codemode script ${theme.fg("dim", call.parentId)}`
-      : "model (direct)";
-    const result =
-      call.result === undefined
-        ? block(call.status === "running" ? "(still running)" : "(not kept in the session)", "dim")
-        : block(call.result || "(empty)", call.status === "error" ? "error" : "toolOutput");
-
-    return [
-      ` ${label("Server:")} ${call.server}`,
-      ` ${label("Status:")} ${statusLabel(theme, call.status)} ${theme.fg("dim", `· ${formatDuration(call.durationMs, call.status === "running")}`)}`,
-      ` ${label("Started:")} ${call.startedBefore ? "before " : ""}${new Date(call.startedAt).toLocaleTimeString()}`,
-      ` ${label("Called by:")} ${caller}`,
-      "",
-      ` ${label("Arguments:")}`,
-      ...block(formatArgs(call.args), "toolOutput"),
-      "",
-      ` ${label("Result:")}`,
-      ...result,
-    ];
-  }
-
   #cachedDetailLines(call: TraceCall, width: number): string[] {
     const cache = this.#detailCache;
     if (
@@ -262,7 +227,7 @@ export class TraceDock implements Component {
     ) {
       return cache.lines;
     }
-    const lines = this.#detailLines(call, width);
+    const lines = detailLines(this.#theme, call, width);
     this.#detailCache = { seq: call.seq, status: call.status, result: call.result, width, lines };
     return lines;
   }
