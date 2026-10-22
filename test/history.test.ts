@@ -86,9 +86,11 @@ test("callsFromBranch rebuilds direct Tidewave calls with their arguments and re
 test("callsFromBranch rebuilds Tidewave calls made from codemode scripts", () => {
   const nested = callsFromBranch(branch).slice(1);
   assert.deepEqual(
-    nested.map(({ id, parentId, status, result, args }) => ({
+    nested.map(({ id, parentId, startedAt, startedBefore, status, result, args }) => ({
       id,
       parentId,
+      startedAt,
+      startedBefore,
       status,
       result,
       args,
@@ -97,6 +99,8 @@ test("callsFromBranch rebuilds Tidewave calls made from codemode scripts", () =>
       {
         id: "script/1",
         parentId: "script",
+        startedAt: 20_000,
+        startedBefore: true,
         status: "ok",
         result: undefined,
         args: { query: "SELECT 1" },
@@ -104,6 +108,8 @@ test("callsFromBranch rebuilds Tidewave calls made from codemode scripts", () =>
       {
         id: "script/3",
         parentId: "script",
+        startedAt: 20_000,
+        startedBefore: true,
         status: "error",
         result: "boom",
         args: { omitted: "9000 bytes" },
@@ -111,6 +117,8 @@ test("callsFromBranch rebuilds Tidewave calls made from codemode scripts", () =>
       {
         id: "script/4",
         parentId: "script",
+        startedAt: 20_000,
+        startedBefore: true,
         status: "unfinished",
         result: "Still running when the codemode script finished.",
         args: {},

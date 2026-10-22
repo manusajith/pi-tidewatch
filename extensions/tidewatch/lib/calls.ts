@@ -14,6 +14,7 @@ export interface TraceCall {
   summary: string;
   parentId?: string;
   startedAt: number;
+  startedBefore?: boolean;
   durationMs?: number;
   status: CallStatus;
   result?: string;
@@ -34,6 +35,7 @@ export interface CallEnd {
 }
 
 export interface RecordedCall extends CallStart {
+  startedBefore?: boolean;
   status: Exclude<CallStatus, "running">;
   durationMs?: number;
   result?: string;
@@ -106,6 +108,7 @@ export class CallLog {
     for (const record of records) {
       const call = this.#create(record);
       if (!call) continue;
+      call.startedBefore = record.startedBefore;
       call.status = record.status;
       call.durationMs = record.durationMs;
       call.result = record.result;
