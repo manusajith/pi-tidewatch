@@ -26,6 +26,7 @@ export interface TraceDockOptions {
   tui: TUI;
   theme: Theme;
   keybindings: KeybindingsManager;
+  clear: () => void;
   close: () => void;
 }
 
@@ -34,6 +35,7 @@ export class TraceDock implements Component {
   readonly #tui: TUI;
   readonly #theme: Theme;
   readonly #keybindings: KeybindingsManager;
+  readonly #clear: () => void;
   readonly #close: () => void;
   readonly #unsubscribe: () => void;
 
@@ -43,11 +45,12 @@ export class TraceDock implements Component {
   #detailScroll = 0;
   #errorsOnly = false;
 
-  constructor({ log, tui, theme, keybindings, close }: TraceDockOptions) {
+  constructor({ log, tui, theme, keybindings, clear, close }: TraceDockOptions) {
     this.#log = log;
     this.#tui = tui;
     this.#theme = theme;
     this.#keybindings = keybindings;
+    this.#clear = clear;
     this.#close = close;
     this.#unsubscribe = log.subscribe(() => tui.requestRender());
   }
@@ -112,7 +115,7 @@ export class TraceDock implements Component {
       this.#errorsOnly = !this.#errorsOnly;
       this.#resetList();
     } else if (data === "c") {
-      this.#log.clear();
+      this.#clear();
       this.#resetList();
     }
   }

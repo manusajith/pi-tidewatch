@@ -4,7 +4,7 @@ import type { AutocompleteItem } from "@earendil-works/pi-tui";
 import { CallLog } from "./lib/calls.ts";
 import { TraceDock } from "./lib/dock.ts";
 import { formatDuration } from "./lib/format.ts";
-import { callsFromBranch } from "./lib/history.ts";
+import { CLEAR_ENTRY, callsFromBranch } from "./lib/history.ts";
 import { CallWidget } from "./lib/widget.ts";
 
 const KEY = "tidewatch";
@@ -50,6 +50,12 @@ export default function tidewatch(pi: ExtensionAPI): void {
     ctx.ui.setWidget(KEY, showWidget ? (tui, theme) => new CallWidget(log, tui, theme) : undefined);
   }
 
+  function clearTrace(ctx: ExtensionContext): void {
+    pi.appendEntry(CLEAR_ENTRY);
+    log.clear();
+    refresh(ctx);
+  }
+
   async function openDock(ctx: ExtensionContext): Promise<void> {
     if (ctx.mode !== "tui") {
       ctx.ui.notify("The Tidewave call dock needs the interactive terminal UI.", "warning");
@@ -61,7 +67,14 @@ export default function tidewatch(pi: ExtensionAPI): void {
     try {
       await ctx.ui.custom<void>(
         (tui, theme, keybindings, done) =>
-          new TraceDock({ log, tui, theme, keybindings, close: () => done() }),
+          new TraceDock({
+            log,
+            tui,
+            theme,
+            keybindings,
+            clear: () => clearTrace(ctx),
+            close: () => done(),
+          }),
       );
     } finally {
       dockOpen = false;
@@ -123,8 +136,7 @@ export default function tidewatch(pi: ExtensionAPI): void {
       if (action === "") {
         await openDock(ctx);
       } else if (action === "clear") {
-        log.clear();
-        refresh(ctx);
+        clearTrace(ctx);
       } else if (action === "widget" && ["", "on", "off"].includes(value)) {
         widgetEnabled = value === "" ? !widgetEnabled : value === "on";
         refresh(ctx);

@@ -118,3 +118,28 @@ test("callsFromBranch rebuilds Tidewave calls made from codemode scripts", () =>
     ],
   );
 });
+
+test("callsFromBranch drops calls made before the trace was cleared", () => {
+  const cleared: SessionEntry[] = [
+    ...branch,
+    {
+      type: "custom",
+      customType: "tidewatch-clear",
+      id: "5",
+      parentId: "4",
+      timestamp: new Date(0).toISOString(),
+    } as SessionEntry,
+    messageEntry("6", {
+      role: "toolResult",
+      toolCallId: "later",
+      toolName: "mcp__tidewave__get_logs",
+      content: [{ type: "text", text: "tail" }],
+      isError: false,
+      timestamp: 30_000,
+    }),
+  ];
+  assert.deepEqual(
+    callsFromBranch(cleared).map((call) => call.id),
+    ["later"],
+  );
+});

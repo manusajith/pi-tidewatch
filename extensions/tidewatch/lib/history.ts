@@ -3,6 +3,8 @@ import type { SessionEntry } from "@earendil-works/pi-coding-agent";
 import { parseToolName, type RecordedCall } from "./calls.ts";
 import { formatResult } from "./format.ts";
 
+export const CLEAR_ENTRY = "tidewatch-clear";
+
 const UNFINISHED_NOTE = "Still running when the codemode script finished.";
 
 function startedAt(finishedAt: number, durationMs: number | undefined): number {
@@ -14,6 +16,7 @@ export function callsFromBranch(entries: readonly SessionEntry[]): RecordedCall[
   const records: RecordedCall[] = [];
 
   for (const entry of entries) {
+    if (entry.type === "custom" && entry.customType === CLEAR_ENTRY) records.length = 0;
     if (entry.type !== "message") continue;
     const message = entry.message;
 

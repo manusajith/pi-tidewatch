@@ -16,7 +16,7 @@ const theme = {
 function createDock(log: CallLog, rows = 40): TraceDock {
   const tui = { terminal: { rows }, requestRender: () => {} } as unknown as TUI;
   const keybindings = { matches: () => false } as unknown as KeybindingsManager;
-  return new TraceDock({ log, tui, theme, keybindings, close: () => {} });
+  return new TraceDock({ log, tui, theme, keybindings, clear: () => log.clear(), close: () => {} });
 }
 
 function seed(log: CallLog, count: number): void {
