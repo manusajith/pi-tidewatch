@@ -4,7 +4,7 @@ import test from "node:test";
 import type { Theme } from "@earendil-works/pi-coding-agent";
 import { type KeybindingsManager, type TUI, visibleWidth } from "@earendil-works/pi-tui";
 
-import { CallLog } from "../extensions/tidewatch/lib/calls.ts";
+import { CallLog, type RecordedCall } from "../extensions/tidewatch/lib/calls.ts";
 import { TraceDock } from "../extensions/tidewatch/lib/dock.ts";
 
 const theme = {
@@ -111,4 +111,25 @@ test("the selection stays on the same call when new calls arrive", () => {
       .find((line) => line.includes("›"))
       ?.includes("#1"),
   );
+});
+
+function restoredCall(durationMs: number): RecordedCall {
+  return {
+    id: "a",
+    toolName: "mcp__tidewave__project_eval",
+    args: { code: "1" },
+    status: "ok",
+    durationMs,
+    result: "2",
+  };
+}
+
+test("the detail view redraws when a restored call replaces the one on screen", () => {
+  const log = new CallLog();
+  log.replace([restoredCall(40)]);
+  const dock = createDock(log);
+  dock.handleInput("tui.select.confirm");
+  assert.ok(dock.render(80).some((line) => line.includes("40ms")));
+  log.replace([restoredCall(75)]);
+  assert.ok(dock.render(80).some((line) => line.includes("75ms")));
 });

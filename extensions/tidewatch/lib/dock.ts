@@ -23,8 +23,7 @@ const PROBLEM_STATUSES = new Set<TraceCall["status"]>(["error", "unfinished"]);
 
 interface DetailCache {
   seq: number;
-  status: TraceCall["status"];
-  result: string | undefined;
+  revision: number;
   width: number;
   lines: string[];
 }
@@ -235,16 +234,11 @@ export class TraceDock implements Component {
 
   #cachedDetailLines(call: TraceCall, width: number): string[] {
     const cache = this.#detailCache;
-    if (
-      cache?.seq === call.seq &&
-      cache.status === call.status &&
-      cache.result === call.result &&
-      cache.width === width
-    ) {
+    if (cache?.seq === call.seq && cache.revision === call.revision && cache.width === width) {
       return cache.lines;
     }
     const lines = detailLines(this.#theme, call, width - 2);
-    this.#detailCache = { seq: call.seq, status: call.status, result: call.result, width, lines };
+    this.#detailCache = { seq: call.seq, revision: call.revision, width, lines };
     return lines;
   }
 

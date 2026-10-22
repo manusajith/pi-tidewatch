@@ -128,3 +128,16 @@ test("unfinished script calls are counted apart from errors", () => {
   ]);
   assert.deepEqual(log.counts(), { total: 2, running: 0, errors: 1, unfinished: 1 });
 });
+
+test("every change gives a call a revision no other call has had", () => {
+  const log = new CallLog();
+  const started = log.start({ id: "a", toolName: "mcp__tidewave__get_logs", args: {} });
+  const before = started?.revision;
+  const finished = log.finish("a", { result: "ok", isError: false, durationMs: 1 });
+  assert.notEqual(finished?.revision, before);
+  log.replace([{ id: "a", toolName: "mcp__tidewave__get_logs", args: {}, status: "ok" }]);
+  const [restored] = log.calls;
+  assert.equal(restored.seq, finished?.seq);
+  assert.notEqual(restored.revision, finished?.revision);
+  assert.notEqual(restored.revision, before);
+});

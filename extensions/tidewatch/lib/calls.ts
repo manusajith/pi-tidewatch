@@ -8,6 +8,7 @@ export type CallStatus = "running" | "ok" | "error" | "unfinished";
 export interface TraceCall {
   id: string;
   seq: number;
+  revision: number;
   server: string;
   tool: string;
   args: unknown;
@@ -56,6 +57,7 @@ export function parseToolName(toolName: string): { server: string; tool: string 
 export class CallLog {
   #calls: TraceCall[] = [];
   #seq = 0;
+  #revision = 0;
   #listeners = new Set<() => void>();
   readonly #limit: number;
 
@@ -101,6 +103,7 @@ export class CallLog {
     call.durationMs = end.durationMs ?? Date.now() - call.startedAt;
     call.status = end.isError || isErrorResult(end.result) ? "error" : "ok";
     call.result = formatResult(end.result);
+    call.revision = this.#nextRevision();
     this.#emit();
     return call;
   }
@@ -137,6 +140,7 @@ export class CallLog {
     return {
       id: start.id,
       seq: this.#seq,
+      revision: this.#nextRevision(),
       server: name.server,
       tool: name.tool,
       args: start.args,
@@ -145,6 +149,11 @@ export class CallLog {
       startedAt: start.startedAt ?? Date.now(),
       status: "running",
     };
+  }
+
+  #nextRevision(): number {
+    this.#revision += 1;
+    return this.#revision;
   }
 
   #push(call: TraceCall): void {
