@@ -37,7 +37,7 @@ export function callsFromBranch(entries: readonly SessionEntry[]): RecordedCall[
         parentId: message.toolCallId,
         startedAt: startedAt(message.timestamp, nested.durationMs),
         durationMs: nested.durationMs,
-        status: nested.status === "ok" ? "ok" : "error",
+        status: nested.status,
         result: nested.status === "unfinished" ? UNFINISHED_NOTE : nested.error,
       });
     }

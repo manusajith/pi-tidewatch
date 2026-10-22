@@ -119,3 +119,12 @@ test("finish updates the newest call when a provider reuses a call id", () => {
   );
   assert.equal(log.counts().running, 0);
 });
+
+test("unfinished script calls do not count as errors", () => {
+  const log = new CallLog();
+  log.replace([
+    { id: "a", toolName: "mcp__tidewave__get_docs", args: {}, status: "unfinished" },
+    { id: "b", toolName: "mcp__tidewave__get_logs", args: {}, status: "error" },
+  ]);
+  assert.deepEqual(log.counts(), { total: 2, running: 0, errors: 1 });
+});

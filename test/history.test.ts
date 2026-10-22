@@ -111,7 +111,7 @@ test("callsFromBranch rebuilds Tidewave calls made from codemode scripts", () =>
       {
         id: "script/4",
         parentId: "script",
-        status: "error",
+        status: "unfinished",
         result: "Still running when the codemode script finished.",
         args: {},
       },

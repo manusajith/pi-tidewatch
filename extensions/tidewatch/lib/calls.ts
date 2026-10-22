@@ -3,7 +3,7 @@ import { formatResult, isErrorResult, summarizeArgs } from "./format.ts";
 const TOOL_NAME = /^mcp__(tidewave\w*?)__(.+)$/iu;
 const DEFAULT_LIMIT = 500;
 
-export type CallStatus = "running" | "ok" | "error";
+export type CallStatus = "running" | "ok" | "error" | "unfinished";
 
 export interface TraceCall {
   id: string;

@@ -11,7 +11,7 @@ import {
 
 import type { CallLog, TraceCall } from "./calls.ts";
 import { formatArgs, formatDuration, pluralize } from "./format.ts";
-import { callRow, displayLine, labelWidth, padToWidth } from "./render.ts";
+import { callRow, displayLine, labelWidth, padToWidth, statusLabel } from "./render.ts";
 
 const FRAME_ROWS = 7;
 const RESERVED_ROWS = 6;
@@ -215,12 +215,6 @@ export class TraceDock implements Component {
         .flatMap((line) => (line.length > 0 ? wrapTextWithAnsi(line, textWidth) : [""]))
         .map((line) => `   ${theme.fg(color, line)}`);
 
-    const status =
-      call.status === "running"
-        ? theme.fg("warning", "running")
-        : call.status === "ok"
-          ? theme.fg("success", "ok")
-          : theme.fg("error", "error");
     const caller = call.parentId
       ? `codemode script ${theme.fg("dim", call.parentId)}`
       : "model (direct)";
@@ -231,7 +225,7 @@ export class TraceDock implements Component {
 
     return [
       ` ${label("Server:")} ${call.server}`,
-      ` ${label("Status:")} ${status} ${theme.fg("dim", `· ${formatDuration(call.durationMs)}`)}`,
+      ` ${label("Status:")} ${statusLabel(theme, call.status)} ${theme.fg("dim", `· ${formatDuration(call.durationMs)}`)}`,
       ` ${label("Started:")} ${new Date(call.startedAt).toLocaleTimeString()}`,
       ` ${label("Called by:")} ${caller}`,
       "",

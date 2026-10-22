@@ -1,4 +1,4 @@
-import type { Theme } from "@earendil-works/pi-coding-agent";
+import type { Theme, ThemeColor } from "@earendil-works/pi-coding-agent";
 import { stripTerminalSequences, truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 
 import type { CallStatus, TraceCall } from "./calls.ts";
@@ -10,9 +10,23 @@ export function displayLine(line: string): string {
     .replaceAll(/\p{Cc}/gu, "");
 }
 
+const STATUS_STYLES: Record<CallStatus, { symbol: string; color: ThemeColor }> = {
+  running: { symbol: "…", color: "warning" },
+  ok: { symbol: "✓", color: "success" },
+  error: { symbol: "✗", color: "error" },
+  unfinished: { symbol: "?", color: "muted" },
+};
+
+export function statusSymbol(status: CallStatus): string {
+  return STATUS_STYLES[status].symbol;
+}
+
 export function statusIcon(theme: Theme, status: CallStatus): string {
-  if (status === "running") return theme.fg("warning", "…");
-  return status === "ok" ? theme.fg("success", "✓") : theme.fg("error", "✗");
+  return theme.fg(STATUS_STYLES[status].color, STATUS_STYLES[status].symbol);
+}
+
+export function statusLabel(theme: Theme, status: CallStatus): string {
+  return theme.fg(STATUS_STYLES[status].color, status);
 }
 
 export function callLabel(call: TraceCall): string {
