@@ -76,3 +76,21 @@ test("the problems filter shows errors and unfinished script calls", () => {
   assert.ok(text.includes("broken") && text.includes("cut"), text);
   assert.ok(!text.includes("fine"), text);
 });
+
+test("the selection stays on the same call when new calls arrive", () => {
+  const log = new CallLog();
+  seed(log, 5);
+  const dock = createDock(log);
+  dock.handleInput("tui.select.down");
+  dock.handleInput("tui.select.down");
+  log.start({ id: "call-6", toolName: "mcp__tidewave__project_eval", args: { code: "6" } });
+  const selected = dock.render(80).find((line) => line.includes("›"));
+  assert.ok(selected?.includes("#3"), selected);
+  dock.handleInput("G");
+  assert.ok(
+    dock
+      .render(80)
+      .find((line) => line.includes("›"))
+      ?.includes("#1"),
+  );
+});

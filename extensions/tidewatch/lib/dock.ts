@@ -49,7 +49,7 @@ export class TraceDock implements Component {
 
   #detailSeq: number | undefined;
   #detailCache: DetailCache | undefined;
-  #selected = 0;
+  #selectedSeq: number | undefined;
   #listScroll = 0;
   #detailScroll = 0;
   #problemsOnly = false;
@@ -107,21 +107,22 @@ export class TraceDock implements Component {
   #handleListInput(data: string): void {
     const calls = this.#visibleCalls();
     const last = Math.max(0, calls.length - 1);
+    const selected = this.#selectedIndex(calls);
     const page = this.#listRows;
     const keys = this.#keybindings;
+    const select = (index: number) => {
+      this.#selectedSeq = calls[Math.min(last, Math.max(0, index))]?.seq;
+    };
 
     if (keys.matches(data, "tui.select.cancel")) this.#close();
-    else if (keys.matches(data, "tui.select.up")) this.#selected = Math.max(0, this.#selected - 1);
-    else if (keys.matches(data, "tui.select.down"))
-      this.#selected = Math.min(last, this.#selected + 1);
-    else if (keys.matches(data, "tui.select.pageUp"))
-      this.#selected = Math.max(0, this.#selected - page);
-    else if (keys.matches(data, "tui.select.pageDown"))
-      this.#selected = Math.min(last, this.#selected + page);
-    else if (matchesKey(data, Key.home) || data === "g") this.#selected = 0;
-    else if (matchesKey(data, Key.end) || data === "G") this.#selected = last;
+    else if (keys.matches(data, "tui.select.up")) select(selected - 1);
+    else if (keys.matches(data, "tui.select.down")) select(selected + 1);
+    else if (keys.matches(data, "tui.select.pageUp")) select(selected - page);
+    else if (keys.matches(data, "tui.select.pageDown")) select(selected + page);
+    else if (matchesKey(data, Key.home) || data === "g") select(0);
+    else if (matchesKey(data, Key.end) || data === "G") select(last);
     else if (keys.matches(data, "tui.select.confirm") || matchesKey(data, Key.right)) {
-      const call = calls[this.#selected];
+      const call = calls[selected];
       if (call) {
         this.#detailSeq = call.seq;
         this.#detailScroll = 0;
@@ -150,8 +151,15 @@ export class TraceDock implements Component {
       this.#detailScroll = Number.MAX_SAFE_INTEGER;
   }
 
+  #selectedIndex(calls: readonly TraceCall[]): number {
+    return Math.max(
+      0,
+      calls.findIndex((call) => call.seq === this.#selectedSeq),
+    );
+  }
+
   #resetList(): void {
-    this.#selected = 0;
+    this.#selectedSeq = undefined;
     this.#listScroll = 0;
   }
 
@@ -177,9 +185,9 @@ export class TraceDock implements Component {
     const theme = this.#theme;
     const rows = this.#listRows;
     const calls = this.#visibleCalls();
-    this.#selected = Math.min(this.#selected, Math.max(0, calls.length - 1));
-    if (this.#selected < this.#listScroll) this.#listScroll = this.#selected;
-    if (this.#selected >= this.#listScroll + rows) this.#listScroll = this.#selected - rows + 1;
+    const selectedIndex = this.#selectedIndex(calls);
+    if (selectedIndex < this.#listScroll) this.#listScroll = selectedIndex;
+    if (selectedIndex >= this.#listScroll + rows) this.#listScroll = selectedIndex - rows + 1;
 
     const { total, running, errors, unfinished } = this.#log.counts();
     const subtitle = [
@@ -204,7 +212,7 @@ export class TraceDock implements Component {
       const columns = labelWidth(visible);
       const innerWidth = width - 2;
       for (const [index, call] of visible.entries()) {
-        const selected = this.#listScroll + index === this.#selected;
+        const selected = this.#listScroll + index === selectedIndex;
         const seq = theme.fg("dim", `#${call.seq}`.padStart(5));
         const line = `${selected ? "›" : " "}${seq} ${callRow(theme, call, columns, innerWidth - 8)}`;
         body.push(selected ? theme.bg("selectedBg", padToWidth(line, innerWidth)) : line);
