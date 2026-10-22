@@ -11,22 +11,35 @@ function startedAt(finishedAt: number, durationMs: number | undefined): number {
   return durationMs === undefined ? finishedAt : finishedAt - durationMs;
 }
 
+interface IssuedCall {
+  args: unknown;
+  issuedAt: number;
+}
+
 export function callsFromBranch(entries: readonly SessionEntry[]): RecordedCall[] {
-  const argsById = new Map<string, unknown>();
+  const issued = new Map<string, IssuedCall>();
   const records: RecordedCall[] = [];
+  let clearedAt = Number.NEGATIVE_INFINITY;
 
   for (const entry of entries) {
-    if (entry.type === "custom" && entry.customType === CLEAR_ENTRY) records.length = 0;
+    if (entry.type === "custom" && entry.customType === CLEAR_ENTRY) {
+      records.length = 0;
+      clearedAt = Date.parse(entry.timestamp);
+    }
     if (entry.type !== "message") continue;
     const message = entry.message;
 
     if (message.role === "assistant") {
       for (const part of message.content) {
-        if (part.type === "toolCall") argsById.set(part.id, part.arguments);
+        if (part.type === "toolCall") {
+          issued.set(part.id, { args: part.arguments, issuedAt: Date.parse(entry.timestamp) });
+        }
       }
       continue;
     }
     if (message.role !== "toolResult") continue;
+    const call = issued.get(message.toolCallId);
+    if ((call?.issuedAt ?? Date.parse(entry.timestamp)) <= clearedAt) continue;
 
     for (const nested of message.nestedCalls?.calls ?? []) {
       if (!parseToolName(nested.name)) continue;
@@ -47,7 +60,7 @@ export function callsFromBranch(entries: readonly SessionEntry[]): RecordedCall[
       records.push({
         id: message.toolCallId,
         toolName: message.toolName,
-        args: argsById.get(message.toolCallId),
+        args: call?.args,
         startedAt: startedAt(message.timestamp, message.durationMs),
         durationMs: message.durationMs,
         status: message.isError ? "error" : "ok",

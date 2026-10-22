@@ -5,13 +5,23 @@ import type { SessionEntry } from "@earendil-works/pi-coding-agent";
 
 import { callsFromBranch } from "../extensions/tidewatch/lib/history.ts";
 
-function messageEntry(id: string, message: unknown): SessionEntry {
+function messageEntry(id: string, message: unknown, at = 0): SessionEntry {
   return {
     type: "message",
     id,
     parentId: null,
-    timestamp: new Date(0).toISOString(),
+    timestamp: new Date(at).toISOString(),
     message,
+  } as SessionEntry;
+}
+
+function clearEntry(id: string, at: number): SessionEntry {
+  return {
+    type: "custom",
+    customType: "tidewatch-clear",
+    id,
+    parentId: null,
+    timestamp: new Date(at).toISOString(),
   } as SessionEntry;
 }
 
@@ -130,24 +140,58 @@ test("callsFromBranch rebuilds Tidewave calls made from codemode scripts", () =>
 test("callsFromBranch drops calls made before the trace was cleared", () => {
   const cleared: SessionEntry[] = [
     ...branch,
-    {
-      type: "custom",
-      customType: "tidewatch-clear",
-      id: "5",
-      parentId: "4",
-      timestamp: new Date(0).toISOString(),
-    } as SessionEntry,
-    messageEntry("6", {
-      role: "toolResult",
-      toolCallId: "later",
-      toolName: "mcp__tidewave__get_logs",
-      content: [{ type: "text", text: "tail" }],
-      isError: false,
-      timestamp: 30_000,
-    }),
+    clearEntry("5", 25_000),
+    messageEntry(
+      "6",
+      {
+        role: "toolResult",
+        toolCallId: "later",
+        toolName: "mcp__tidewave__get_logs",
+        content: [{ type: "text", text: "tail" }],
+        isError: false,
+        timestamp: 30_000,
+      },
+      30_000,
+    ),
   ];
   assert.deepEqual(
     callsFromBranch(cleared).map((call) => call.id),
     ["later"],
+  );
+});
+
+test("callsFromBranch drops calls that were still running when the trace was cleared", () => {
+  const [assistant, direct, script] = branch;
+  const inFlight: SessionEntry[] = [
+    assistant,
+    clearEntry("5", 5_000),
+    { ...direct, timestamp: new Date(10_000).toISOString() } as SessionEntry,
+    { ...script, timestamp: new Date(20_000).toISOString() } as SessionEntry,
+    messageEntry(
+      "6",
+      {
+        role: "assistant",
+        content: [
+          { type: "toolCall", id: "after", name: "mcp__tidewave__get_logs", arguments: {} },
+        ],
+      },
+      21_000,
+    ),
+    messageEntry(
+      "7",
+      {
+        role: "toolResult",
+        toolCallId: "after",
+        toolName: "mcp__tidewave__get_logs",
+        content: [{ type: "text", text: "tail" }],
+        isError: false,
+        timestamp: 22_000,
+      },
+      22_000,
+    ),
+  ];
+  assert.deepEqual(
+    callsFromBranch(inFlight).map((call) => call.id),
+    ["after"],
   );
 });
