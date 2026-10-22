@@ -17,16 +17,20 @@ const STATUS_STYLES: Record<CallStatus, { symbol: string; color: ThemeColor }> =
   unfinished: { symbol: "?", color: "muted" },
 };
 
+export function statusColor(status: CallStatus): ThemeColor {
+  return STATUS_STYLES[status].color;
+}
+
 export function statusSymbol(status: CallStatus): string {
   return STATUS_STYLES[status].symbol;
 }
 
 export function statusIcon(theme: Theme, status: CallStatus): string {
-  return theme.fg(STATUS_STYLES[status].color, STATUS_STYLES[status].symbol);
+  return theme.fg(statusColor(status), statusSymbol(status));
 }
 
 export function statusLabel(theme: Theme, status: CallStatus): string {
-  return theme.fg(STATUS_STYLES[status].color, status);
+  return theme.fg(statusColor(status), status);
 }
 
 export function callLabel(call: TraceCall): string {

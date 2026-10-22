@@ -5,7 +5,7 @@ import { CallLog } from "./lib/calls.ts";
 import { TraceDock } from "./lib/dock.ts";
 import { formatDuration } from "./lib/format.ts";
 import { CLEAR_ENTRY, callsFromBranch, lastClearedAt } from "./lib/history.ts";
-import { statusSymbol } from "./lib/render.ts";
+import { statusColor, statusSymbol } from "./lib/render.ts";
 import { CallWidget } from "./lib/widget.ts";
 
 const KEY = "tidewatch";
@@ -29,7 +29,7 @@ function statusText(theme: Theme, log: CallLog, dockOpen: boolean): string | und
       : `${formatDuration(latest.durationMs)} ${statusSymbol(latest.status)}`;
   return (
     theme.fg("accent", `tidewave ${total}`) +
-    (errors > 0 ? theme.fg("error", ` ✗${errors}`) : "") +
+    (errors > 0 ? theme.fg(statusColor("error"), ` ${statusSymbol("error")}${errors}`) : "") +
     theme.fg("muted", ` · ${latest.tool} ${outcome}`) +
     (dockOpen ? "" : theme.fg("dim", ` · ${SHORTCUT}`))
   );
