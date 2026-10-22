@@ -4,8 +4,11 @@ import { join } from "node:path";
 const root = join(import.meta.dirname, "..");
 
 const required = [
+  "extensions/tidewatch/index.ts",
   "extensions/tidewatch/lib/calls.ts",
   "extensions/tidewatch/lib/format.ts",
+  "extensions/tidewatch/lib/render.ts",
+  "extensions/tidewatch/lib/widget.ts",
   "test/calls.test.ts",
   "test/format.test.ts",
   "LICENSE",

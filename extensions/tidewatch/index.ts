@@ -1,0 +1,69 @@
+import type { ExtensionAPI, ExtensionContext, Theme } from "@earendil-works/pi-coding-agent";
+
+import { CallLog } from "./lib/calls.ts";
+import { formatDuration } from "./lib/format.ts";
+import { CallWidget } from "./lib/widget.ts";
+
+const KEY = "tidewatch";
+
+function statusText(theme: Theme, log: CallLog): string | undefined {
+  const latest = log.latest;
+  if (!latest) return undefined;
+  const { total, errors } = log.counts();
+  const outcome =
+    latest.status === "running"
+      ? "…"
+      : `${formatDuration(latest.durationMs)} ${latest.status === "ok" ? "✓" : "✗"}`;
+  return (
+    theme.fg("accent", `tidewave ${total}`) +
+    (errors > 0 ? theme.fg("error", ` ✗${errors}`) : "") +
+    theme.fg("muted", ` · ${latest.tool} ${outcome}`)
+  );
+}
+
+export default function tidewatch(pi: ExtensionAPI): void {
+  const log = new CallLog();
+  let widgetMounted = false;
+
+  function refresh(ctx: ExtensionContext): void {
+    if (!ctx.hasUI) return;
+    ctx.ui.setStatus(KEY, statusText(ctx.ui.theme, log));
+
+    const showWidget = ctx.mode === "tui" && log.calls.length > 0;
+    if (showWidget === widgetMounted) return;
+    widgetMounted = showWidget;
+    ctx.ui.setWidget(KEY, showWidget ? (tui, theme) => new CallWidget(log, tui, theme) : undefined);
+  }
+
+  pi.on("session_start", (_event, ctx) => {
+    log.replace([]);
+    widgetMounted = false;
+    refresh(ctx);
+  });
+
+  pi.on("tool_execution_start", (event, ctx) => {
+    const call = log.start({
+      id: event.toolCallId,
+      toolName: event.toolName,
+      args: event.args,
+      parentId: event.parentToolCallId,
+    });
+    if (call) refresh(ctx);
+  });
+
+  pi.on("tool_execution_end", (event, ctx) => {
+    const call = log.finish(event.toolCallId, {
+      result: event.result,
+      isError: event.isError,
+      durationMs: event.durationMs,
+    });
+    if (call) refresh(ctx);
+  });
+
+  pi.on("session_shutdown", (_event, ctx) => {
+    if (!ctx.hasUI) return;
+    ctx.ui.setStatus(KEY, undefined);
+    ctx.ui.setWidget(KEY, undefined);
+    widgetMounted = false;
+  });
+}
