@@ -16,6 +16,7 @@ import { callRow, displayLine, labelWidth, padToWidth } from "./render.ts";
 const FRAME_ROWS = 7;
 const RESERVED_ROWS = 6;
 const MIN_BODY_ROWS = 5;
+const MIN_WIDTH = 4;
 const MAX_WIDTH = 140;
 
 type BodyColor = "toolOutput" | "error" | "dim";
@@ -62,7 +63,8 @@ export class TraceDock implements Component {
   }
 
   render(width: number): string[] {
-    const frameWidth = Math.max(20, Math.min(width, MAX_WIDTH));
+    const frameWidth = Math.min(width, MAX_WIDTH);
+    if (frameWidth < MIN_WIDTH) return [];
     const detail = this.#detailId === undefined ? undefined : this.#log.get(this.#detailId);
     if (detail) return this.#renderDetail(detail, frameWidth);
     this.#detailId = undefined;

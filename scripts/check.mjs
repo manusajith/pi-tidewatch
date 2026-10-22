@@ -12,6 +12,7 @@ const required = [
   "extensions/tidewatch/lib/render.ts",
   "extensions/tidewatch/lib/widget.ts",
   "test/calls.test.ts",
+  "test/dock.test.ts",
   "test/format.test.ts",
   "test/history.test.ts",
   "test/render.test.ts",
