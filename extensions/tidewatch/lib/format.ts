@@ -1,6 +1,6 @@
 const MAX_RESULT_CHARS = 64 * 1024;
 const SUMMARY_KEYS = ["query", "code", "reference", "action", "grep", "path"] as const;
-const MAIN_ARG_KEYS = new Set(["query", "code"]);
+const MAIN_ARG_KEYS = ["query", "code"] as const;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -19,10 +19,10 @@ export function summarizeArgs(args: unknown): string {
 
 export function formatArgs(args: unknown): string {
   if (!isRecord(args)) return toJson(args);
-  const main = args.query ?? args.code;
-  if (typeof main !== "string") return toJson(args);
-  const rest = Object.fromEntries(Object.entries(args).filter(([key]) => !MAIN_ARG_KEYS.has(key)));
-  return Object.keys(rest).length > 0 ? `${main}\n\n${toJson(rest)}` : main;
+  const mainKey = MAIN_ARG_KEYS.find((key) => typeof args[key] === "string");
+  if (!mainKey) return toJson(args);
+  const { [mainKey]: main, ...rest } = args;
+  return Object.keys(rest).length > 0 ? `${String(main)}\n\n${toJson(rest)}` : String(main);
 }
 
 function contentPartText(part: unknown): string {

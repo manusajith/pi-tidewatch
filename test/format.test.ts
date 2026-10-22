@@ -27,6 +27,7 @@ test("formatArgs shows code first and the remaining arguments as JSON", () => {
     'SELECT $1\n\n{\n  "arguments": [\n    1\n  ]\n}',
   );
   assert.equal(formatArgs({ tail: 5 }), '{\n  "tail": 5\n}');
+  assert.equal(formatArgs({ query: "SELECT 1", code: "1" }), 'SELECT 1\n\n{\n  "code": "1"\n}');
   assert.equal(formatArgs(null), "null");
 });
 
