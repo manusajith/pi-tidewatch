@@ -15,7 +15,9 @@ const theme = {
 
 function createDock(log: CallLog, rows = 40): TraceDock {
   const tui = { terminal: { rows }, requestRender: () => {} } as unknown as TUI;
-  const keybindings = { matches: () => false } as unknown as KeybindingsManager;
+  const keybindings = {
+    matches: (data: string, binding: string) => data === binding,
+  } as unknown as KeybindingsManager;
   return new TraceDock({ log, tui, theme, keybindings, clear: () => log.clear(), close: () => {} });
 }
 
@@ -38,4 +40,14 @@ test("the dock never renders lines wider than the terminal", () => {
       assert.ok(visibleWidth(line) <= width, `line wider than ${width}: ${line}`);
     }
   }
+});
+
+test("page down moves by the number of rows the list shows", () => {
+  const log = new CallLog();
+  seed(log, 20);
+  const dock = createDock(log, 20);
+  dock.handleInput("tui.select.pageDown");
+  const lines = dock.render(80);
+  const selected = lines.find((line) => line.includes("›"));
+  assert.ok(selected?.includes("#14"), selected);
 });

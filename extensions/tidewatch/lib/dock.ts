@@ -84,6 +84,10 @@ export class TraceDock implements Component {
     return Math.max(MIN_BODY_ROWS, this.#tui.terminal.rows - FRAME_ROWS - RESERVED_ROWS);
   }
 
+  get #listRows(): number {
+    return this.#bodyRows - 1;
+  }
+
   #visibleCalls(): TraceCall[] {
     const calls = this.#log.calls.toReversed();
     return this.#errorsOnly ? calls.filter((call) => call.status === "error") : calls;
@@ -92,7 +96,7 @@ export class TraceDock implements Component {
   #handleListInput(data: string): void {
     const calls = this.#visibleCalls();
     const last = Math.max(0, calls.length - 1);
-    const page = this.#bodyRows;
+    const page = this.#listRows;
     const keys = this.#keybindings;
 
     if (keys.matches(data, "tui.select.cancel")) this.#close();
@@ -160,7 +164,7 @@ export class TraceDock implements Component {
 
   #renderList(width: number): string[] {
     const theme = this.#theme;
-    const rows = this.#bodyRows - 1;
+    const rows = this.#listRows;
     const calls = this.#visibleCalls();
     this.#selected = Math.min(this.#selected, Math.max(0, calls.length - 1));
     if (this.#selected < this.#listScroll) this.#listScroll = this.#selected;
