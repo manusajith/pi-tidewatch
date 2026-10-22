@@ -46,8 +46,8 @@ export function isErrorResult(result: unknown): boolean {
   return isRecord(result) && result.isError === true;
 }
 
-export function formatDuration(ms?: number): string {
-  if (ms === undefined) return "…";
+export function formatDuration(ms?: number, running = false): string {
+  if (ms === undefined) return running ? "…" : "-";
   return ms < 1000 ? `${Math.round(ms)}ms` : `${(ms / 1000).toFixed(1)}s`;
 }
 

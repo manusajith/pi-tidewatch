@@ -56,8 +56,9 @@ test("isErrorResult reads the MCP isError flag", () => {
   assert.equal(isErrorResult("error"), false);
 });
 
-test("formatDuration switches to seconds after one second", () => {
-  assert.equal(formatDuration(), "…");
+test("formatDuration switches to seconds and marks unknown durations", () => {
+  assert.equal(formatDuration(undefined, true), "…");
+  assert.equal(formatDuration(), "-");
   assert.equal(formatDuration(42), "42ms");
   assert.equal(formatDuration(1530), "1.5s");
 });

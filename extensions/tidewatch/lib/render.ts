@@ -52,7 +52,10 @@ export function callRow(
   width: number,
 ): string {
   const label = theme.fg("accent", callLabel(call).padEnd(labelColumns));
-  const duration = theme.fg("dim", formatDuration(call.durationMs).padStart(6));
+  const duration = theme.fg(
+    "dim",
+    formatDuration(call.durationMs, call.status === "running").padStart(6),
+  );
   const prefix = `${statusIcon(theme, call.status)} ${label} ${duration}  `;
   const room = Math.max(0, width - visibleWidth(prefix));
   return truncateToWidth(

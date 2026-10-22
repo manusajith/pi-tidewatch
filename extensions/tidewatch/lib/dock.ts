@@ -240,7 +240,7 @@ export class TraceDock implements Component {
 
     return [
       ` ${label("Server:")} ${call.server}`,
-      ` ${label("Status:")} ${statusLabel(theme, call.status)} ${theme.fg("dim", `· ${formatDuration(call.durationMs)}`)}`,
+      ` ${label("Status:")} ${statusLabel(theme, call.status)} ${theme.fg("dim", `· ${formatDuration(call.durationMs, call.status === "running")}`)}`,
       ` ${label("Started:")} ${call.startedBefore ? "before " : ""}${new Date(call.startedAt).toLocaleTimeString()}`,
       ` ${label("Called by:")} ${caller}`,
       "",
