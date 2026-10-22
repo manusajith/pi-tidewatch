@@ -1,10 +1,18 @@
 import { existsSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 
-const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+const root = join(import.meta.dirname, "..");
 
-const required = ["LICENSE", "tsconfig.json", ".oxlintrc.json", ".oxfmtrc.json"];
+const required = [
+  "extensions/tidewatch/lib/calls.ts",
+  "extensions/tidewatch/lib/format.ts",
+  "test/calls.test.ts",
+  "test/format.test.ts",
+  "LICENSE",
+  "tsconfig.json",
+  ".oxlintrc.json",
+  ".oxfmtrc.json",
+];
 
 const missing = required.filter((file) => !existsSync(join(root, file)));
 
