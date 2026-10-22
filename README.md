@@ -29,7 +29,7 @@ Tidewatch only draws UI. It never sends messages or registers tools, so nothing 
 }
 ```
 
-Tidewatch traces tools from any MCP server whose name starts with `tidewave`, so `tidewave_api` and `tidewave_admin` work too.
+Tidewatch traces tools from any MCP server whose name starts with `tidewave`, ignoring case, so `tidewave_api` and `TidewaveAdmin` work too.
 
 ## Install
 

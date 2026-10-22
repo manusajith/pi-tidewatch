@@ -12,6 +12,10 @@ test("parseToolName matches Tidewave servers and ignores other tools", () => {
     server: "tidewave_api",
     tool: "get_logs",
   });
+  assert.deepEqual(parseToolName("mcp__TidewaveApp__project_eval"), {
+    server: "TidewaveApp",
+    tool: "project_eval",
+  });
   assert.equal(parseToolName("mcp__github__search"), undefined);
   assert.equal(parseToolName("bash"), undefined);
 });
