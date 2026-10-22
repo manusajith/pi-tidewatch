@@ -79,7 +79,7 @@ export class CallLog {
   }
 
   get(id: string): TraceCall | undefined {
-    return this.#calls.find((call) => call.id === id);
+    return this.#calls.findLast((call) => call.id === id);
   }
 
   start(start: CallStart): TraceCall | undefined {

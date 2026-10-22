@@ -99,3 +99,19 @@ test("subscribers hear about every change until they unsubscribe", () => {
   log.start({ id: "b", toolName: "mcp__tidewave__get_logs", args: {} });
   assert.equal(changes, 3);
 });
+
+test("finish updates the newest call when a provider reuses a call id", () => {
+  const log = new CallLog();
+  log.start({ id: "call_0", toolName: "mcp__tidewave__get_logs", args: {} });
+  log.finish("call_0", { result: "first", isError: false, durationMs: 1 });
+  log.start({ id: "call_0", toolName: "mcp__tidewave__get_logs", args: {} });
+  log.finish("call_0", { result: "second", isError: false, durationMs: 2 });
+  assert.deepEqual(
+    log.calls.map((call) => [call.seq, call.result]),
+    [
+      [1, "first"],
+      [2, "second"],
+    ],
+  );
+  assert.equal(log.counts().running, 0);
+});
