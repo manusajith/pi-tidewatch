@@ -3,7 +3,7 @@ import test from "node:test";
 
 import type { SessionEntry } from "@earendil-works/pi-coding-agent";
 
-import { callsFromBranch } from "../extensions/tidewatch/lib/history.ts";
+import { callsFromBranch, lastClearedAt } from "../extensions/tidewatch/lib/history.ts";
 
 function messageEntry(id: string, message: unknown, at = 0): SessionEntry {
   return {
@@ -155,7 +155,7 @@ test("callsFromBranch drops calls made before the trace was cleared", () => {
     ),
   ];
   assert.deepEqual(
-    callsFromBranch(cleared).map((call) => call.id),
+    callsFromBranch(cleared, lastClearedAt(cleared)).map((call) => call.id),
     ["later"],
   );
 });
@@ -191,7 +191,14 @@ test("callsFromBranch drops calls that were still running when the trace was cle
     ),
   ];
   assert.deepEqual(
-    callsFromBranch(inFlight).map((call) => call.id),
+    callsFromBranch(inFlight, lastClearedAt(inFlight)).map((call) => call.id),
     ["after"],
   );
+});
+
+test("callsFromBranch drops calls cleared on another branch of the session", () => {
+  const sibling = [clearEntry("9", 50_000), clearEntry("8", 40_000)];
+  assert.equal(lastClearedAt([...branch, ...sibling]), 50_000);
+  assert.deepEqual(callsFromBranch(branch, lastClearedAt([...branch, ...sibling])), []);
+  assert.equal(callsFromBranch(branch, lastClearedAt(branch)).length, 4);
 });

@@ -77,7 +77,7 @@ Commands:
 
 Results of direct calls are stored in the session, so a restored trace shows them in full. Calls made from codemode scripts are stored only as a summary with their arguments, status, duration, and error text. Their results show up live but not after a resume or reload.
 
-Clearing the trace is remembered, so cleared calls stay gone after a resume or reload.
+Clearing the trace is remembered, so cleared calls stay gone after a resume, a reload, or `/tree` navigation to an earlier point or another branch.
 
 Results over 64 KiB are truncated in the dock. The trace keeps the newest 500 calls.
 

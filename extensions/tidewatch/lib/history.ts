@@ -16,16 +16,24 @@ interface IssuedCall {
   issuedAt: number;
 }
 
-export function callsFromBranch(entries: readonly SessionEntry[]): RecordedCall[] {
+export function lastClearedAt(entries: readonly SessionEntry[]): number {
+  let clearedAt = Number.NEGATIVE_INFINITY;
+  for (const entry of entries) {
+    if (entry.type !== "custom" || entry.customType !== CLEAR_ENTRY) continue;
+    const at = Date.parse(entry.timestamp);
+    if (at > clearedAt) clearedAt = at;
+  }
+  return clearedAt;
+}
+
+export function callsFromBranch(
+  entries: readonly SessionEntry[],
+  clearedAt = Number.NEGATIVE_INFINITY,
+): RecordedCall[] {
   const issued = new Map<string, IssuedCall>();
   const records: RecordedCall[] = [];
-  let clearedAt = Number.NEGATIVE_INFINITY;
 
   for (const entry of entries) {
-    if (entry.type === "custom" && entry.customType === CLEAR_ENTRY) {
-      records.length = 0;
-      clearedAt = Date.parse(entry.timestamp);
-    }
     if (entry.type !== "message") continue;
     const message = entry.message;
 
