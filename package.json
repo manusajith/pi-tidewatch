@@ -1,0 +1,67 @@
+{
+  "name": "pi-tidewatch",
+  "version": "0.1.0",
+  "description": "Watch every Tidewave MCP call your pi agent makes in Elixir and Phoenix projects",
+  "keywords": [
+    "elixir",
+    "mcp",
+    "phoenix",
+    "pi",
+    "pi-package",
+    "tidewave",
+    "trace",
+    "tui"
+  ],
+  "homepage": "https://github.com/manusajith/pi-tidewatch#readme",
+  "bugs": {
+    "url": "https://github.com/manusajith/pi-tidewatch/issues"
+  },
+  "license": "MIT",
+  "author": "Manu S Ajith <neo@codingarena.in>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/manusajith/pi-tidewatch.git"
+  },
+  "files": [
+    "extensions",
+    "README.md",
+    "LICENSE"
+  ],
+  "type": "module",
+  "exports": {
+    ".": "./extensions/tidewatch/index.ts"
+  },
+  "scripts": {
+    "check": "npm run check:files && npm run check:format && npm run check:lint && npm run check:types && npm run test",
+    "check:files": "node ./scripts/check.mjs",
+    "check:format": "oxfmt --check .",
+    "check:lint": "oxlint .",
+    "check:types": "tsc --noEmit",
+    "format": "oxfmt --write .",
+    "lint": "oxlint .",
+    "lint:fix": "oxlint --fix .",
+    "pack:dry-run": "npm pack --dry-run",
+    "prepublishOnly": "npm run check && npm run pack:dry-run",
+    "test": "node --test"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-coding-agent": "^1.4.0",
+    "@earendil-works/pi-tui": "^1.4.0",
+    "@types/node": "^24.5.2",
+    "oxfmt": "^0.41.0",
+    "oxlint": "^1.56.0",
+    "typescript": "^5.9.2"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*"
+  },
+  "engines": {
+    "node": ">=22.18"
+  },
+  "pi": {
+    "extensions": [
+      "./extensions"
+    ]
+  }
+}
