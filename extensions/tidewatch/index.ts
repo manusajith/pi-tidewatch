@@ -1,4 +1,5 @@
 import type { ExtensionAPI, ExtensionContext, Theme } from "@earendil-works/pi-coding-agent";
+import type { AutocompleteItem } from "@earendil-works/pi-tui";
 
 import { CallLog } from "./lib/calls.ts";
 import { TraceDock } from "./lib/dock.ts";
@@ -7,6 +8,14 @@ import { CallWidget } from "./lib/widget.ts";
 
 const KEY = "tidewatch";
 const SHORTCUT = "shift+up";
+const USAGE = "Usage: /tidewatch [clear | widget [on|off]]";
+
+const SUBCOMMANDS: AutocompleteItem[] = [
+  { value: "clear", label: "clear", description: "Forget the calls traced so far" },
+  { value: "widget", label: "widget", description: "Toggle the live rows above the editor" },
+  { value: "widget on", label: "widget on", description: "Show the live rows above the editor" },
+  { value: "widget off", label: "widget off", description: "Hide the live rows above the editor" },
+];
 
 function statusText(theme: Theme, log: CallLog, dockOpen: boolean): string | undefined {
   const latest = log.latest;
@@ -28,12 +37,13 @@ export default function tidewatch(pi: ExtensionAPI): void {
   const log = new CallLog();
   let widgetMounted = false;
   let dockOpen = false;
+  let widgetEnabled = true;
 
   function refresh(ctx: ExtensionContext): void {
     if (!ctx.hasUI) return;
     ctx.ui.setStatus(KEY, statusText(ctx.ui.theme, log, dockOpen));
 
-    const showWidget = ctx.mode === "tui" && log.calls.length > 0;
+    const showWidget = widgetEnabled && ctx.mode === "tui" && log.calls.length > 0;
     if (showWidget === widgetMounted) return;
     widgetMounted = showWidget;
     ctx.ui.setWidget(KEY, showWidget ? (tui, theme) => new CallWidget(log, tui, theme) : undefined);
@@ -96,7 +106,25 @@ export default function tidewatch(pi: ExtensionAPI): void {
   });
 
   pi.registerCommand("tidewatch", {
-    description: "Browse the Tidewave calls made in this session",
-    handler: (_args, ctx) => openDock(ctx),
+    description: "Browse Tidewave calls, or clear them and toggle the live rows",
+    getArgumentCompletions: (prefix) => {
+      const matches = SUBCOMMANDS.filter((item) => item.value.startsWith(prefix.trimStart()));
+      return matches.length > 0 ? matches : null;
+    },
+    handler: async (args, ctx) => {
+      const [action = "", value = ""] = args.trim().split(/\s+/u);
+      if (action === "") {
+        await openDock(ctx);
+      } else if (action === "clear") {
+        log.clear();
+        refresh(ctx);
+      } else if (action === "widget" && ["", "on", "off"].includes(value)) {
+        widgetEnabled = value === "" ? !widgetEnabled : value === "on";
+        refresh(ctx);
+        ctx.ui.notify(`Tidewave live rows ${widgetEnabled ? "shown" : "hidden"}`, "info");
+      } else {
+        ctx.ui.notify(USAGE, "warning");
+      }
+    },
   });
 }
