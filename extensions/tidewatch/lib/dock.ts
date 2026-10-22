@@ -11,7 +11,7 @@ import {
 
 import type { CallLog, TraceCall } from "./calls.ts";
 import { formatArgs, formatDuration, pluralize } from "./format.ts";
-import { callRow, labelWidth, padToWidth } from "./render.ts";
+import { callRow, displayLine, labelWidth, padToWidth } from "./render.ts";
 
 const FRAME_ROWS = 7;
 const RESERVED_ROWS = 6;
@@ -206,6 +206,7 @@ export class TraceDock implements Component {
     const block = (text: string, color: BodyColor) =>
       text
         .split("\n")
+        .map((line) => displayLine(line))
         .flatMap((line) => (line.length > 0 ? wrapTextWithAnsi(line, textWidth) : [""]))
         .map((line) => `   ${theme.fg(color, line)}`);
 

@@ -14,6 +14,7 @@ const required = [
   "test/calls.test.ts",
   "test/format.test.ts",
   "test/history.test.ts",
+  "test/render.test.ts",
   "README.md",
   "LICENSE",
   "tsconfig.json",
