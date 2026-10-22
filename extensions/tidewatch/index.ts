@@ -1,12 +1,14 @@
 import type { ExtensionAPI, ExtensionContext, Theme } from "@earendil-works/pi-coding-agent";
 
 import { CallLog } from "./lib/calls.ts";
+import { TraceDock } from "./lib/dock.ts";
 import { formatDuration } from "./lib/format.ts";
 import { CallWidget } from "./lib/widget.ts";
 
 const KEY = "tidewatch";
+const SHORTCUT = "shift+up";
 
-function statusText(theme: Theme, log: CallLog): string | undefined {
+function statusText(theme: Theme, log: CallLog, dockOpen: boolean): string | undefined {
   const latest = log.latest;
   if (!latest) return undefined;
   const { total, errors } = log.counts();
@@ -17,22 +19,43 @@ function statusText(theme: Theme, log: CallLog): string | undefined {
   return (
     theme.fg("accent", `tidewave ${total}`) +
     (errors > 0 ? theme.fg("error", ` ✗${errors}`) : "") +
-    theme.fg("muted", ` · ${latest.tool} ${outcome}`)
+    theme.fg("muted", ` · ${latest.tool} ${outcome}`) +
+    (dockOpen ? "" : theme.fg("dim", ` · ${SHORTCUT}`))
   );
 }
 
 export default function tidewatch(pi: ExtensionAPI): void {
   const log = new CallLog();
   let widgetMounted = false;
+  let dockOpen = false;
 
   function refresh(ctx: ExtensionContext): void {
     if (!ctx.hasUI) return;
-    ctx.ui.setStatus(KEY, statusText(ctx.ui.theme, log));
+    ctx.ui.setStatus(KEY, statusText(ctx.ui.theme, log, dockOpen));
 
     const showWidget = ctx.mode === "tui" && log.calls.length > 0;
     if (showWidget === widgetMounted) return;
     widgetMounted = showWidget;
     ctx.ui.setWidget(KEY, showWidget ? (tui, theme) => new CallWidget(log, tui, theme) : undefined);
+  }
+
+  async function openDock(ctx: ExtensionContext): Promise<void> {
+    if (ctx.mode !== "tui") {
+      ctx.ui.notify("The Tidewave call dock needs the interactive terminal UI.", "warning");
+      return;
+    }
+    if (dockOpen) return;
+    dockOpen = true;
+    refresh(ctx);
+    try {
+      await ctx.ui.custom<void>(
+        (tui, theme, keybindings, done) =>
+          new TraceDock({ log, tui, theme, keybindings, close: () => done() }),
+      );
+    } finally {
+      dockOpen = false;
+      refresh(ctx);
+    }
   }
 
   pi.on("session_start", (_event, ctx) => {
@@ -65,5 +88,15 @@ export default function tidewatch(pi: ExtensionAPI): void {
     ctx.ui.setStatus(KEY, undefined);
     ctx.ui.setWidget(KEY, undefined);
     widgetMounted = false;
+  });
+
+  pi.registerShortcut(SHORTCUT, {
+    description: "Open the Tidewave call dock",
+    handler: (ctx) => openDock(ctx),
+  });
+
+  pi.registerCommand("tidewatch", {
+    description: "Browse the Tidewave calls made in this session",
+    handler: (_args, ctx) => openDock(ctx),
   });
 }

@@ -17,6 +17,10 @@ export function labelWidth(calls: readonly TraceCall[]): number {
   return Math.max(0, ...calls.map((call) => callLabel(call).length));
 }
 
+export function padToWidth(text: string, width: number): string {
+  return text + " ".repeat(Math.max(0, width - visibleWidth(text)));
+}
+
 export function callRow(
   theme: Theme,
   call: TraceCall,
