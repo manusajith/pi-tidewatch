@@ -5,17 +5,19 @@ import type { TraceCall } from "./calls.ts";
 import { formatArgs, formatDuration } from "./format.ts";
 import { displayLine, statusLabel } from "./render.ts";
 
+const INDENT = "   ";
+
 type BodyColor = "toolOutput" | "error" | "dim";
 
-export function detailLines(theme: Theme, call: TraceCall, width: number): string[] {
-  const textWidth = Math.max(10, width - 6);
+export function detailLines(theme: Theme, call: TraceCall, innerWidth: number): string[] {
+  const textWidth = Math.max(1, innerWidth - INDENT.length - 1);
   const label = (name: string) => theme.fg("toolTitle", name);
   const block = (text: string, color: BodyColor) =>
     text
       .split("\n")
       .map((line) => displayLine(line))
       .flatMap((line) => (line.length > 0 ? wrapTextWithAnsi(line, textWidth) : [""]))
-      .map((line) => `   ${theme.fg(color, line)}`);
+      .map((line) => `${INDENT}${theme.fg(color, line)}`);
 
   const caller = call.parentId
     ? `codemode script ${theme.fg("dim", call.parentId)}`

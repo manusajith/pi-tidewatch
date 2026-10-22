@@ -35,10 +35,28 @@ test("the dock never renders lines wider than the terminal", () => {
   const log = new CallLog();
   seed(log, 3);
   const dock = createDock(log);
-  for (const width of [3, 4, 10, 19, 80, 200]) {
+  const widths = [3, 4, 10, 19, 80, 200];
+  for (const width of widths) {
     for (const line of dock.render(width)) {
       assert.ok(visibleWidth(line) <= width, `line wider than ${width}: ${line}`);
     }
+  }
+  dock.handleInput("tui.select.confirm");
+  for (const width of widths) {
+    for (const line of dock.render(width)) {
+      assert.ok(visibleWidth(line) <= width, `detail line wider than ${width}: ${line}`);
+    }
+  }
+});
+
+test("the detail view wraps long arguments on narrow terminals", () => {
+  const log = new CallLog();
+  log.start({ id: "a", toolName: "mcp__tidewave__project_eval", args: { code: "z".repeat(40) } });
+  const dock = createDock(log);
+  dock.handleInput("tui.select.confirm");
+  for (const width of [8, 10, 19]) {
+    const shown = dock.render(width).join("").replaceAll(/[^z]/gu, "");
+    assert.equal(shown.length, 40, `width ${width}`);
   }
 });
 

@@ -243,7 +243,7 @@ export class TraceDock implements Component {
     ) {
       return cache.lines;
     }
-    const lines = detailLines(this.#theme, call, width);
+    const lines = detailLines(this.#theme, call, width - 2);
     this.#detailCache = { seq: call.seq, status: call.status, result: call.result, width, lines };
     return lines;
   }
