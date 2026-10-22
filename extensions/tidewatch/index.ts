@@ -44,7 +44,7 @@ export default function tidewatch(pi: ExtensionAPI): void {
     if (!ctx.hasUI) return;
     ctx.ui.setStatus(KEY, statusText(ctx.ui.theme, log, dockOpen));
 
-    const showWidget = widgetEnabled && ctx.mode === "tui" && log.calls.length > 0;
+    const showWidget = widgetEnabled && !dockOpen && ctx.mode === "tui" && log.calls.length > 0;
     if (showWidget === widgetMounted) return;
     widgetMounted = showWidget;
     ctx.ui.setWidget(KEY, showWidget ? (tui, theme) => new CallWidget(log, tui, theme) : undefined);
