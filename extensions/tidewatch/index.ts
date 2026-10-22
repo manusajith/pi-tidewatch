@@ -52,6 +52,7 @@ export default function tidewatch(pi: ExtensionAPI): void {
   }
 
   function clearTrace(ctx: ExtensionContext): void {
+    if (log.calls.length === 0) return;
     pi.appendEntry(CLEAR_ENTRY);
     log.clear();
     refresh(ctx);
