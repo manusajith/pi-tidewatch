@@ -21,6 +21,14 @@ const MAX_WIDTH = 140;
 
 type BodyColor = "toolOutput" | "error" | "dim";
 
+interface DetailCache {
+  seq: number;
+  status: TraceCall["status"];
+  result: string | undefined;
+  width: number;
+  lines: string[];
+}
+
 export interface TraceDockOptions {
   log: CallLog;
   tui: TUI;
@@ -40,6 +48,7 @@ export class TraceDock implements Component {
   readonly #unsubscribe: () => void;
 
   #detailSeq: number | undefined;
+  #detailCache: DetailCache | undefined;
   #selected = 0;
   #listScroll = 0;
   #detailScroll = 0;
@@ -74,7 +83,9 @@ export class TraceDock implements Component {
     return this.#renderList(frameWidth);
   }
 
-  invalidate(): void {}
+  invalidate(): void {
+    this.#detailCache = undefined;
+  }
 
   dispose(): void {
     this.#unsubscribe();
@@ -241,9 +252,24 @@ export class TraceDock implements Component {
     ];
   }
 
+  #cachedDetailLines(call: TraceCall, width: number): string[] {
+    const cache = this.#detailCache;
+    if (
+      cache?.seq === call.seq &&
+      cache.status === call.status &&
+      cache.result === call.result &&
+      cache.width === width
+    ) {
+      return cache.lines;
+    }
+    const lines = this.#detailLines(call, width);
+    this.#detailCache = { seq: call.seq, status: call.status, result: call.result, width, lines };
+    return lines;
+  }
+
   #renderDetail(call: TraceCall, width: number): string[] {
     const rows = this.#bodyRows;
-    const lines = this.#detailLines(call, width);
+    const lines = this.#cachedDetailLines(call, width);
 
     const maxScroll = Math.max(0, lines.length - rows);
     this.#detailScroll = Math.min(Math.max(0, this.#detailScroll), maxScroll);

@@ -51,3 +51,13 @@ test("page down moves by the number of rows the list shows", () => {
   const selected = lines.find((line) => line.includes("›"));
   assert.ok(selected?.includes("#14"), selected);
 });
+
+test("the detail view reflects a result that arrives while it is open", () => {
+  const log = new CallLog();
+  seed(log, 1);
+  const dock = createDock(log);
+  dock.handleInput("tui.select.confirm");
+  assert.ok(dock.render(80).some((line) => line.includes("(still running)")));
+  log.finish("call-1", { result: "42", isError: false, durationMs: 5 });
+  assert.ok(dock.render(80).some((line) => line.includes("42")));
+});
