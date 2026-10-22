@@ -3,34 +3,14 @@ import type { SessionEntry } from "@earendil-works/pi-coding-agent";
 import { parseToolName, type RecordedCall } from "./calls.ts";
 import { formatResult } from "./format.ts";
 
-export const CLEAR_ENTRY = "tidewatch-clear";
-
 const UNFINISHED_NOTE = "Still running when the codemode script finished.";
 
 function startedAt(finishedAt: number, durationMs: number | undefined): number {
   return durationMs === undefined ? finishedAt : finishedAt - durationMs;
 }
 
-interface IssuedCall {
-  args: unknown;
-  issuedAt: number;
-}
-
-export function lastClearedAt(entries: readonly SessionEntry[]): number {
-  let clearedAt = Number.NEGATIVE_INFINITY;
-  for (const entry of entries) {
-    if (entry.type !== "custom" || entry.customType !== CLEAR_ENTRY) continue;
-    const at = Date.parse(entry.timestamp);
-    if (at > clearedAt) clearedAt = at;
-  }
-  return clearedAt;
-}
-
-export function callsFromBranch(
-  entries: readonly SessionEntry[],
-  clearedAt = Number.NEGATIVE_INFINITY,
-): RecordedCall[] {
-  const issued = new Map<string, IssuedCall>();
+export function callsFromBranch(entries: readonly SessionEntry[]): RecordedCall[] {
+  const argsById = new Map<string, unknown>();
   const records: RecordedCall[] = [];
 
   for (const entry of entries) {
@@ -39,15 +19,11 @@ export function callsFromBranch(
 
     if (message.role === "assistant") {
       for (const part of message.content) {
-        if (part.type === "toolCall") {
-          issued.set(part.id, { args: part.arguments, issuedAt: Date.parse(entry.timestamp) });
-        }
+        if (part.type === "toolCall") argsById.set(part.id, part.arguments);
       }
       continue;
     }
     if (message.role !== "toolResult") continue;
-    const call = issued.get(message.toolCallId);
-    if ((call?.issuedAt ?? Date.parse(entry.timestamp)) <= clearedAt) continue;
 
     for (const nested of message.nestedCalls?.calls ?? []) {
       if (!parseToolName(nested.name)) continue;
@@ -68,7 +44,7 @@ export function callsFromBranch(
       records.push({
         id: message.toolCallId,
         toolName: message.toolName,
-        args: call?.args,
+        args: argsById.get(message.toolCallId),
         startedAt: startedAt(message.timestamp, message.durationMs),
         durationMs: message.durationMs,
         status: message.isError ? "error" : "ok",

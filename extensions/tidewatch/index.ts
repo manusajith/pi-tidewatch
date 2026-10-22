@@ -4,7 +4,7 @@ import type { AutocompleteItem } from "@earendil-works/pi-tui";
 import { CallLog } from "./lib/calls.ts";
 import { TraceDock } from "./lib/dock.ts";
 import { formatDuration } from "./lib/format.ts";
-import { CLEAR_ENTRY, callsFromBranch, lastClearedAt } from "./lib/history.ts";
+import { callsFromBranch } from "./lib/history.ts";
 import { statusColor, statusSymbol } from "./lib/render.ts";
 import { CallWidget } from "./lib/widget.ts";
 
@@ -52,8 +52,6 @@ export default function tidewatch(pi: ExtensionAPI): void {
   }
 
   function clearTrace(ctx: ExtensionContext): void {
-    if (log.calls.length === 0) return;
-    pi.appendEntry(CLEAR_ENTRY);
     log.clear();
     refresh(ctx);
   }
@@ -85,8 +83,7 @@ export default function tidewatch(pi: ExtensionAPI): void {
   }
 
   function restore(ctx: ExtensionContext): void {
-    const session = ctx.sessionManager;
-    log.replace(callsFromBranch(session.getBranch(), lastClearedAt(session.getEntries())));
+    log.replace(callsFromBranch(ctx.sessionManager.getBranch()));
     refresh(ctx);
   }
 

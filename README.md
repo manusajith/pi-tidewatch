@@ -4,7 +4,7 @@ See every [Tidewave](https://tidewave.ai) call your [pi](https://pi.dev) agent m
 
 Tidewave gives the agent a live line into your running app: it evaluates code, runs SQL, reads logs, and looks up docs and source. Those calls are easy to lose in the transcript, and when they run inside a codemode script you never see them at all. Tidewatch keeps a running trace of them next to the editor.
 
-Tidewatch only draws UI. It never sends messages or registers tools, so nothing it does reaches the model's context. The one thing it writes to the session is a small marker when you clear the trace, which the model never sees.
+Tidewatch only draws UI. It never sends messages or registers tools, so nothing it does reaches the model's context.
 
 ## Features
 
@@ -77,7 +77,7 @@ Commands:
 
 Results of direct calls are stored in the session, so a restored trace shows them in full. Calls made from codemode scripts are stored only as a summary with their arguments, status, duration, and error text. Their results show up live but not after a resume or reload.
 
-Clearing the trace is remembered, so cleared calls stay gone after a resume, a reload, or `/tree` navigation to an earlier point or another branch.
+Clearing only affects the trace on screen. A resume, a reload, or `/tree` navigation rebuilds it from the session, so cleared calls come back.
 
 Results over 64 KiB are truncated in the dock. The trace keeps the newest 500 calls.
 
