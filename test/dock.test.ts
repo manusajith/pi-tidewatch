@@ -133,3 +133,12 @@ test("the detail view redraws when a restored call replaces the one on screen", 
   log.replace([restoredCall(75)]);
   assert.ok(dock.render(80).some((line) => line.includes("75ms")));
 });
+
+test("the detail view closes when a restore puts a different call at the same number", () => {
+  const log = new CallLog();
+  log.replace([restoredCall(40)]);
+  const dock = createDock(log);
+  dock.handleInput("tui.select.confirm");
+  log.replace([{ ...restoredCall(75), id: "b", toolName: "mcp__tidewave__get_logs" }]);
+  assert.ok(dock.render(80).some((line) => line.includes("Tidewave calls")));
+});

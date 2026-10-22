@@ -21,6 +21,12 @@ const MAX_WIDTH = 140;
 
 const PROBLEM_STATUSES = new Set<TraceCall["status"]>(["error", "unfinished"]);
 
+type CallKey = Pick<TraceCall, "seq" | "id">;
+
+function isCall(call: TraceCall, key: CallKey | undefined): boolean {
+  return call.seq === key?.seq && call.id === key.id;
+}
+
 interface DetailCache {
   seq: number;
   revision: number;
@@ -46,9 +52,9 @@ export class TraceDock implements Component {
   readonly #close: () => void;
   readonly #unsubscribe: () => void;
 
-  #detailSeq: number | undefined;
+  #detailKey: CallKey | undefined;
   #detailCache: DetailCache | undefined;
-  #selectedSeq: number | undefined;
+  #selectedKey: CallKey | undefined;
   #listScroll = 0;
   #detailScroll = 0;
   #problemsOnly = false;
@@ -68,7 +74,7 @@ export class TraceDock implements Component {
       this.#close();
       return;
     }
-    if (this.#detailSeq === undefined) this.#handleListInput(data);
+    if (this.#detailKey === undefined) this.#handleListInput(data);
     else this.#handleDetailInput(data);
     this.#tui.requestRender();
   }
@@ -76,9 +82,9 @@ export class TraceDock implements Component {
   render(width: number): string[] {
     const frameWidth = Math.min(width, MAX_WIDTH);
     if (frameWidth < MIN_WIDTH) return [];
-    const detail = this.#log.calls.find((call) => call.seq === this.#detailSeq);
+    const detail = this.#log.calls.find((call) => isCall(call, this.#detailKey));
     if (detail) return this.#renderDetail(detail, frameWidth);
-    this.#detailSeq = undefined;
+    this.#detailKey = undefined;
     return this.#renderList(frameWidth);
   }
 
@@ -110,7 +116,8 @@ export class TraceDock implements Component {
     const page = this.#listRows;
     const keys = this.#keybindings;
     const select = (index: number) => {
-      this.#selectedSeq = calls[Math.min(last, Math.max(0, index))]?.seq;
+      const call = calls[Math.min(last, Math.max(0, index))];
+      this.#selectedKey = call && { seq: call.seq, id: call.id };
     };
 
     if (keys.matches(data, "tui.select.cancel")) this.#close();
@@ -123,7 +130,7 @@ export class TraceDock implements Component {
     else if (keys.matches(data, "tui.select.confirm") || matchesKey(data, Key.right)) {
       const call = calls[selected];
       if (call) {
-        this.#detailSeq = call.seq;
+        this.#detailKey = { seq: call.seq, id: call.id };
         this.#detailScroll = 0;
       }
     } else if (data === "e") {
@@ -140,7 +147,7 @@ export class TraceDock implements Component {
     const keys = this.#keybindings;
 
     if (keys.matches(data, "tui.select.cancel") || matchesKey(data, Key.left))
-      this.#detailSeq = undefined;
+      this.#detailKey = undefined;
     else if (keys.matches(data, "tui.select.up")) this.#detailScroll -= 1;
     else if (keys.matches(data, "tui.select.down")) this.#detailScroll += 1;
     else if (keys.matches(data, "tui.select.pageUp")) this.#detailScroll -= page;
@@ -153,12 +160,12 @@ export class TraceDock implements Component {
   #selectedIndex(calls: readonly TraceCall[]): number {
     return Math.max(
       0,
-      calls.findIndex((call) => call.seq === this.#selectedSeq),
+      calls.findIndex((call) => isCall(call, this.#selectedKey)),
     );
   }
 
   #resetList(): void {
-    this.#selectedSeq = undefined;
+    this.#selectedKey = undefined;
     this.#listScroll = 0;
   }
 
